@@ -112,6 +112,18 @@ function formatJam(dateInput) {
     return m ? `${m[1].padStart(2,'0')}:${m[2]}` : '—';
 }
 
+function splitNama(nama) {
+    if (!nama) return [];
+    return String(nama).split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function renderNamaCell(nama) {
+    const list = splitNama(nama);
+    if (list.length === 0) return '<div class="tamu-name">—</div>';
+    if (list.length === 1) return `<div class="tamu-name">${escHtml(list[0])}</div>`;
+    return `<ul class="nama-list">${list.map(n => `<li>${escHtml(n)}</li>`).join('')}</ul>`;
+}
+
 function renderTable(list) {
     const body = document.getElementById('tamuBody');
     if (!list || !list.length) {
@@ -121,7 +133,7 @@ function renderTable(list) {
     body.innerHTML = list.map(t => `
         <tr>
             <td class="td-waktu">${escHtml(formatJam(t["Tanggal pengiriman"] || t.submitdate))}</td>
-            <td><div class="tamu-name">${escHtml(t["Nama"] || '—')}</div></td>
+            <td>${renderNamaCell(t["Nama"])}</td>
             <td><span class="badge-instansi" title="${escHtml(t["Instansi/Lembaga/Individu"] || '')}">${escHtml(t["Instansi/Lembaga/Individu"] || '—')}</span></td>
             <td>${escHtml(t["Pejabat yang dituju"] || '—')}</td>
             <td class="td-contact">
@@ -138,7 +150,8 @@ function renderEmpty(msg) {
 
 function updateStats(list) {
     const instansiSet = new Set(list.map(t => t["Instansi/Lembaga/Individu"]).filter(Boolean));
-    document.getElementById('statTotal').textContent    = list.length;
+    const totalOrang  = list.reduce((sum, t) => sum + Math.max(splitNama(t["Nama"]).length, 1), 0);
+    document.getElementById('statTotal').textContent    = totalOrang;
     document.getElementById('statInstansi').textContent = instansiSet.size;
     document.getElementById('statJam').textContent      =
         new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -147,11 +160,12 @@ function updateStats(list) {
 function filterTable() {
     const q = document.getElementById('searchInput').value.toLowerCase();
     if (!q) { renderTable(allTamu); return; }
-    const filtered = allTamu.filter(t =>
-        (t["Nama"] || '').toLowerCase().includes(q) ||
-        (t["Instansi/Lembaga/Individu"] || '').toLowerCase().includes(q) ||
-        (t["Pejabat yang dituju"] || '').toLowerCase().includes(q)
-    );
+    const filtered = allTamu.filter(t => {
+        const namaList = splitNama(t["Nama"]).map(n => n.toLowerCase());
+        return namaList.some(n => n.includes(q))
+            || (t["Instansi/Lembaga/Individu"] || '').toLowerCase().includes(q)
+            || (t["Pejabat yang dituju"] || '').toLowerCase().includes(q);
+    });
     renderTable(filtered);
 }
 

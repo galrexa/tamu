@@ -381,6 +381,20 @@ tbody tr:hover td { background: #fbf9f7; }
 
 .tamu-name { font-weight: 600; color: var(--navy); font-size: 14px; }
 
+.nama-list {
+    margin: 0;
+    padding-left: 18px;
+    list-style: disc;
+    color: var(--navy);
+}
+
+.nama-list li {
+    font-weight: 600;
+    font-size: 14px;
+    padding: 1px 0;
+    line-height: 1.4;
+}
+
 .badge-instansi {
     display: inline-block;
     background: #eef2ff;
