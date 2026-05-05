@@ -5,7 +5,7 @@
 
 return [
     // Endpoint LimeSurvey RemoteControl 2 JSON-RPC
-    'apiUrl' => 'https://forms.bappisus.go.id/index.php?r=admin/remotecontrol',
+    'apiUrl' => 'URL',
 
     // Cloudflare Turnstile — site key (public, aman dikirim ke browser)
     'turnstileSiteKey' => 'YOUR_SITE_KEY',
