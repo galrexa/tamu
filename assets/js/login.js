@@ -1,7 +1,8 @@
 const SKEY_STORAGE  = 'lsSessionKey';
 const UNAME_STORAGE = 'lsUsername';
 
-let turnstileToken = "";
+let turnstileToken  = "";
+let turnstileWidget = null;
 
 // Kalau session masih ada, langsung lompat ke dashboard
 if (sessionStorage.getItem(SKEY_STORAGE)) {
@@ -15,8 +16,8 @@ function onTurnstileSuccess(token) {
 
 function showError(msg) {
     const err = document.getElementById('errorMsg');
-    err.textContent = msg;
-    err.style.display = 'block';
+    err.textContent    = msg;
+    err.style.display  = 'block';
     const btn = document.getElementById('loginBtn');
     btn.disabled = !turnstileToken;
     btn.querySelector('.btn-text').textContent = 'Masuk ke Dashboard';
@@ -60,30 +61,26 @@ async function cekLogin() {
             const reason = (sKey && sKey.status) ? sKey.status
                          : (data.error ? data.error : 'Username atau password salah.');
             showError(reason);
-            if (typeof turnstile !== 'undefined') turnstile.reset();
-            turnstileToken = "";
+            resetTurnstile();
             return;
         }
 
-        sessionStorage.setItem(SKEY_STORAGE, sKey);
+        sessionStorage.setItem(SKEY_STORAGE,  sKey);
         sessionStorage.setItem(UNAME_STORAGE, u);
-
         window.location.href = 'dashboard.html';
+
     } catch (e) {
         showError("Tidak dapat terhubung ke server: " + e.message);
-        if (typeof turnstile !== 'undefined') turnstile.reset();
-        turnstileToken = "";
+        resetTurnstile();
     }
 }
 
-async function loadConfig() {
-    const res = await fetch('proxy.php', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ method: 'get_client_config' })
-    });
-    const data = await res.json();
-    return data.result || {};
+function resetTurnstile() {
+    turnstileToken = "";
+    document.getElementById('loginBtn').disabled = true;
+    if (typeof turnstile !== 'undefined' && turnstileWidget !== null) {
+        turnstile.reset(turnstileWidget);
+    }
 }
 
 function injectTurnstile(sitekey) {
@@ -92,34 +89,49 @@ function injectTurnstile(sitekey) {
         return;
     }
 
-    // Callback global yang dipanggil Turnstile setelah script-nya selesai dimuat
-    window.__onTurnstileLoad = () => {
-        if (typeof turnstile === 'undefined') return;
-        turnstile.render('#turnstileContainer', {
-            sitekey:  sitekey,
-            callback: onTurnstileSuccess
-        });
-    };
+    const container = document.getElementById('turnstileContainer');
 
-    const s = document.createElement('script');
-    s.src   = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__onTurnstileLoad';
-    s.async = true;
-    s.defer = true;
-    document.head.appendChild(s);
+    // Cegah double render
+    if (container.childElementCount > 0) return;
+
+    if (typeof turnstile !== 'undefined') {
+        // Script sudah ada (cache), render langsung
+        turnstileWidget = turnstile.render(container, {
+            sitekey:  sitekey,
+            callback: onTurnstileSuccess,
+        });
+    } else {
+        // Muat script Turnstile, render setelah siap
+        window.__onTurnstileLoad = () => {
+            if (container.childElementCount > 0) return; // guard kedua
+            turnstileWidget = turnstile.render(container, {
+                sitekey:  sitekey,
+                callback: onTurnstileSuccess,
+            });
+        };
+
+        const s   = document.createElement('script');
+        s.src     = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__onTurnstileLoad&render=explicit';
+        s.async   = true;
+        s.defer   = true;
+        document.head.appendChild(s);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const passInput = document.getElementById('pass');
-    if (passInput) {
-        passInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') cekLogin();
-        });
-    }
-    const loginBtn = document.getElementById('loginBtn');
-    if (loginBtn) loginBtn.addEventListener('click', cekLogin);
+    document.getElementById('pass').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') cekLogin();
+    });
+    document.getElementById('loginBtn').addEventListener('click', cekLogin);
 
     try {
-        const cfg = await loadConfig();
+        const res = await fetch('proxy.php', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ method: 'get_client_config' })
+        });
+        const data = await res.json();
+        const cfg  = data.result || {};
         injectTurnstile(cfg.turnstileSiteKey);
     } catch (e) {
         showError('Gagal memuat konfigurasi: ' + e.message);
