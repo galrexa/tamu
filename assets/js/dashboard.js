@@ -106,15 +106,21 @@ async function muatData(isSilent = false) {
     }
 }
 
+function formatJam(dateInput) {
+    if (!dateInput) return '—';
+    const m = String(dateInput).match(/(\d{1,2}):(\d{2})(?::\d{2})?/);
+    return m ? `${m[1].padStart(2,'0')}:${m[2]}` : '—';
+}
+
 function renderTable(list) {
     const body = document.getElementById('tamuBody');
     if (!list || !list.length) {
-        renderEmpty("Belum ada tamu terdaftar hari ini.");
+        renderEmpty("Belum ada tamu terdaftar pada tanggal ini.");
         return;
     }
     body.innerHTML = list.map(t => `
         <tr>
-            <td class="td-waktu">${escHtml(t["Tanggal Kunjungan"] || '—')}</td>
+            <td class="td-waktu">${escHtml(formatJam(t["Tanggal pengiriman"] || t.submitdate))}</td>
             <td><div class="tamu-name">${escHtml(t["Nama"] || '—')}</div></td>
             <td><span class="badge-instansi" title="${escHtml(t["Instansi/Lembaga/Individu"] || '')}">${escHtml(t["Instansi/Lembaga/Individu"] || '—')}</span></td>
             <td>${escHtml(t["Pejabat yang dituju"] || '—')}</td>
@@ -187,7 +193,7 @@ function filterTamuByDate(list, targetYMD) {
     return (list || []).filter(t => {
         const visit = t["Tanggal Kunjungan"];
         if (visit) return isSameDate(visit, targetYMD);
-        return isSameDate(t.submitdate, targetYMD);
+        return isSameDate(t["Tanggal pengiriman"] || t.submitdate, targetYMD);
     });
 }
 
