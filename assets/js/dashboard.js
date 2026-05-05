@@ -58,15 +58,35 @@ async function muatData(isSilent = false) {
         const dataRes = await dataReq.json();
 
         if (dataRes.result && typeof dataRes.result === 'object' && dataRes.result.status) {
-            sessionStorage.removeItem(SKEY_STORAGE);
-            renderEmpty('Sesi berakhir: ' + dataRes.result.status + '. Silakan login ulang.');
-            setTimeout(logout, 1500);
+            const status = String(dataRes.result.status);
+            const lower  = status.toLowerCase();
+
+            // Survey kosong — bukan error, tampilkan empty state
+            if (lower.includes('no data')) {
+                allTamu = [];
+                renderTable(allTamu);
+                updateStats(allTamu);
+                document.getElementById('lastUpdate').textContent = 'Belum ada data hari ini.';
+                document.getElementById('liveBadge').style.display = 'inline-flex';
+                return;
+            }
+
+            // Session bermasalah — baru logout
+            if (lower.includes('invalid session') || lower.includes('invalid token')) {
+                sessionStorage.removeItem(SKEY_STORAGE);
+                renderEmpty('Sesi berakhir. Silakan login ulang.');
+                setTimeout(logout, 1500);
+                return;
+            }
+
+            // Error lain (mis. "No permission") — tampilkan tanpa logout
+            renderEmpty('Tidak dapat memuat data: ' + status);
             return;
         }
 
         if (dataRes.result) {
             const decoded = JSON.parse(atob(dataRes.result));
-            allTamu = decoded.responses || [];
+            allTamu = filterTamuHariIni(decoded.responses);
             renderTable(allTamu);
             updateStats(allTamu);
 
@@ -137,6 +157,46 @@ function escHtml(str) {
     return String(str)
         .replace(/&/g,'&amp;').replace(/</g,'&lt;')
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Cek apakah string tanggal sama dengan hari ini (timezone lokal browser).
+// Mendukung format: YYYY-MM-DD, YYYY-MM-DD HH:mm:ss, DD/MM/YYYY, DD-MM-YYYY.
+function isToday(dateInput) {
+    if (!dateInput) return false;
+
+    const today = new Date();
+    const ty = today.getFullYear();
+    const tm = today.getMonth() + 1;
+    const td = today.getDate();
+
+    const s = String(dateInput).trim();
+
+    // ISO: 2026-05-05 atau 2026-05-05 14:30:00
+    let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) {
+        return +m[1] === ty && +m[2] === tm && +m[3] === td;
+    }
+
+    // ID format: 05/05/2026 atau 05-05-2026
+    m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (m) {
+        return +m[3] === ty && +m[2] === tm && +m[1] === td;
+    }
+
+    // Fallback: biarkan Date parser yang coba
+    const d = new Date(s);
+    if (isNaN(d)) return false;
+    return d.getFullYear() === ty
+        && d.getMonth() + 1 === tm
+        && d.getDate() === td;
+}
+
+function filterTamuHariIni(list) {
+    return (list || []).filter(t => {
+        const visit = t["Tanggal Kunjungan"];
+        if (visit) return isToday(visit);
+        return isToday(t.submitdate);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
