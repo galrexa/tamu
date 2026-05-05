@@ -48,7 +48,10 @@ async function muatData(isSilent = false) {
 
     try {
         const sKey = sessionStorage.getItem(SKEY_STORAGE);
+        console.log('[muatData] sKey present:', !!sKey, 'length:', sKey ? sKey.length : 0);
+
         if (!sKey) {
+            console.warn('[muatData] No session key in storage → logout');
             renderEmpty('Sesi tidak ditemukan. Silakan login ulang.');
             setTimeout(logout, 1200);
             return;
@@ -63,13 +66,15 @@ async function muatData(isSilent = false) {
             })
         });
         const dataRes = await dataReq.json();
+        console.log('[muatData] response:', dataRes);
 
         if (dataRes.result && typeof dataRes.result === 'object' && dataRes.result.status) {
             const status = String(dataRes.result.status);
             const lower  = status.toLowerCase();
+            console.warn('[muatData] LimeSurvey status:', status);
 
             // Survey kosong — bukan error, tampilkan empty state
-            if (lower.includes('no data')) {
+            if (lower.includes('no data') || lower.includes('tidak ada data')) {
                 allResponses = [];
                 applyDateFilter();
                 document.getElementById('liveBadge').style.display = 'inline-flex';
@@ -77,7 +82,9 @@ async function muatData(isSilent = false) {
             }
 
             // Session bermasalah — baru logout
-            if (lower.includes('invalid session') || lower.includes('invalid token')) {
+            if (lower.includes('invalid session') || lower.includes('invalid token')
+             || lower.includes('sesi tidak valid') || lower.includes('kunci sesi')) {
+                console.warn('[muatData] Session invalid → triggering logout');
                 sessionStorage.removeItem(SKEY_STORAGE);
                 renderEmpty('Sesi berakhir. Silakan login ulang.');
                 setTimeout(logout, 1500);
