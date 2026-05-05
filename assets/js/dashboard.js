@@ -2,7 +2,14 @@ const SID   = 878132;
 const SKEY_STORAGE  = 'lsSessionKey';
 const UNAME_STORAGE = 'lsUsername';
 
-let allTamu = [];
+let allResponses = [];   // raw dari LimeSurvey (cache)
+let allTamu      = [];   // hasil filter sesuai selectedDate
+let selectedDate = todayYMD();
+
+function todayYMD() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
 // Guard: tanpa session key, kembali ke login
 if (!sessionStorage.getItem(SKEY_STORAGE)) {
@@ -63,10 +70,8 @@ async function muatData(isSilent = false) {
 
             // Survey kosong — bukan error, tampilkan empty state
             if (lower.includes('no data')) {
-                allTamu = [];
-                renderTable(allTamu);
-                updateStats(allTamu);
-                document.getElementById('lastUpdate').textContent = 'Belum ada data hari ini.';
+                allResponses = [];
+                applyDateFilter();
                 document.getElementById('liveBadge').style.display = 'inline-flex';
                 return;
             }
@@ -86,13 +91,8 @@ async function muatData(isSilent = false) {
 
         if (dataRes.result) {
             const decoded = JSON.parse(atob(dataRes.result));
-            allTamu = filterTamuHariIni(decoded.responses);
-            renderTable(allTamu);
-            updateStats(allTamu);
-
-            const now = new Date();
-            document.getElementById('lastUpdate').textContent =
-                'Diperbarui: ' + now.toLocaleString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+            allResponses = decoded.responses || [];
+            applyDateFilter();
             document.getElementById('liveBadge').style.display = 'inline-flex';
         } else {
             renderEmpty("Tidak ada data yang tersedia.");
@@ -159,29 +159,21 @@ function escHtml(str) {
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Cek apakah string tanggal sama dengan hari ini (timezone lokal browser).
+// Cek apakah string tanggal sama dengan target YYYY-MM-DD (timezone lokal browser).
 // Mendukung format: YYYY-MM-DD, YYYY-MM-DD HH:mm:ss, DD/MM/YYYY, DD-MM-YYYY.
-function isToday(dateInput) {
-    if (!dateInput) return false;
+function isSameDate(dateInput, targetYMD) {
+    if (!dateInput || !targetYMD) return false;
 
-    const today = new Date();
-    const ty = today.getFullYear();
-    const tm = today.getMonth() + 1;
-    const td = today.getDate();
-
+    const [ty, tm, td] = targetYMD.split('-').map(Number);
     const s = String(dateInput).trim();
 
     // ISO: 2026-05-05 atau 2026-05-05 14:30:00
     let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-    if (m) {
-        return +m[1] === ty && +m[2] === tm && +m[3] === td;
-    }
+    if (m) return +m[1] === ty && +m[2] === tm && +m[3] === td;
 
     // ID format: 05/05/2026 atau 05-05-2026
     m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-    if (m) {
-        return +m[3] === ty && +m[2] === tm && +m[1] === td;
-    }
+    if (m) return +m[3] === ty && +m[2] === tm && +m[1] === td;
 
     // Fallback: biarkan Date parser yang coba
     const d = new Date(s);
@@ -191,12 +183,32 @@ function isToday(dateInput) {
         && d.getDate() === td;
 }
 
-function filterTamuHariIni(list) {
+function filterTamuByDate(list, targetYMD) {
     return (list || []).filter(t => {
         const visit = t["Tanggal Kunjungan"];
-        if (visit) return isToday(visit);
-        return isToday(t.submitdate);
+        if (visit) return isSameDate(visit, targetYMD);
+        return isSameDate(t.submitdate, targetYMD);
     });
+}
+
+function applyDateFilter() {
+    allTamu = filterTamuByDate(allResponses, selectedDate);
+    renderTable(allTamu);
+    updateStats(allTamu);
+    updateLastUpdateLabel();
+}
+
+function updateLastUpdateLabel() {
+    const dateObj = new Date(selectedDate + 'T00:00:00');
+    const dateStr = dateObj.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    const now     = new Date();
+    const timeStr = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+    document.getElementById('lastUpdate').textContent =
+        `Tanggal: ${dateStr} • Diperbarui: ${timeStr}`;
+
+    const isHariIni = selectedDate === todayYMD();
+    document.getElementById('statTotalLabel').textContent =
+        isHariIni ? 'Total Tamu Hari Ini' : `Total Tamu ${dateStr}`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -206,6 +218,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('refreshBtn').addEventListener('click', () => muatData());
     document.getElementById('searchInput').addEventListener('input', filterTable);
+
+    const dateInput = document.getElementById('dateFilter');
+    dateInput.value = selectedDate;
+    dateInput.addEventListener('change', () => {
+        selectedDate = dateInput.value || todayYMD();
+        applyDateFilter();
+    });
+
+    document.getElementById('todayBtn').addEventListener('click', () => {
+        selectedDate = todayYMD();
+        dateInput.value = selectedDate;
+        applyDateFilter();
+    });
 
     muatData();
     startAutoUpdate();

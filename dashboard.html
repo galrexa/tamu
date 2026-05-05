@@ -34,7 +34,7 @@
         <!-- Stat summary -->
         <div class="stat-row">
             <div class="stat-card">
-                <div class="stat-label">Total Tamu Hari Ini</div>
+                <div class="stat-label" id="statTotalLabel">Total Tamu Hari Ini</div>
                 <div class="stat-value" id="statTotal">—</div>
                 <div class="stat-accent"></div>
             </div>
@@ -54,8 +54,13 @@
         <div class="table-wrap">
             <div class="table-header">
                 <h2>Daftar Kunjungan</h2>
-                <input type="text" class="search-input" id="searchInput"
-                       placeholder="Cari nama atau instansi...">
+                <div class="filter-group">
+                    <label class="filter-label" for="dateFilter">Tanggal:</label>
+                    <input type="date" class="search-input date-input" id="dateFilter">
+                    <button type="button" class="btn-outline btn-today" id="todayBtn">Hari Ini</button>
+                    <input type="text" class="search-input" id="searchInput"
+                           placeholder="Cari nama atau instansi...">
+                </div>
             </div>
             <div class="tbl-container">
                 <table>
