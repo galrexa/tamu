@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard – Buku Tamu Bappisus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="page-dashboard">
+
+<div class="page-wrapper">
+    <div class="dashboard-section">
+
+        <div class="dash-topbar">
+            <div>
+                <div class="dash-title">Buku Tamu Harian</div>
+                <div class="dash-sub" id="lastUpdate">Menghubungkan ke server...</div>
+            </div>
+            <div class="dash-actions">
+                <span class="user-chip" id="userChip" style="display:none">
+                    <span class="avatar" id="userAvatar">?</span>
+                    <span class="uname" id="userName">—</span>
+                </span>
+                <span class="live-badge" id="liveBadge" style="display:none">
+                    <span class="live-dot"></span> Live
+                </span>
+                <button class="btn-outline" id="logoutBtn">Keluar</button>
+                <button class="btn-sm-navy" id="refreshBtn">Perbarui Data</button>
+            </div>
+        </div>
+
+        <!-- Stat summary -->
+        <div class="stat-row">
+            <div class="stat-card">
+                <div class="stat-label">Total Tamu Hari Ini</div>
+                <div class="stat-value" id="statTotal">—</div>
+                <div class="stat-accent"></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Instansi Unik</div>
+                <div class="stat-value" id="statInstansi">—</div>
+                <div class="stat-accent"></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Update Terakhir</div>
+                <div class="stat-value small" id="statJam">—</div>
+                <div class="stat-accent"></div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+            <div class="table-header">
+                <h2>Daftar Kunjungan</h2>
+                <input type="text" class="search-input" id="searchInput"
+                       placeholder="Cari nama atau instansi...">
+            </div>
+            <div class="tbl-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Nama Tamu</th>
+                            <th>Instansi</th>
+                            <th>Pejabat Tujuan</th>
+                            <th>Kontak</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tamuBody">
+                        <tr><td colspan="5" class="empty-state">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="assets/js/dashboard.js"></script>
+</body>
+</html>

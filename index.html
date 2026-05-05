@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – Buku Tamu Bappisus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="page-login">
+
+<div class="page-wrapper">
+    <div class="login-card">
+
+        <div class="login-header">
+            <img src="assets/logo_bappisus.webp" alt="Bappisus" class="logo-img">
+            <h1>Sistem Buku Tamu Digital</h1>
+            <p>Masuk untuk mengelola data tamu dan melihat laporan kunjungan</p>
+        </div>
+
+        <div class="login-body">
+            <div class="error-box" id="errorMsg"></div>
+
+            <div class="field">
+                <label>Username</label>
+                <input type="text" id="user" placeholder="Masukkan username" autocomplete="username">
+            </div>
+
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="pass" placeholder="••••••••••" autocomplete="current-password">
+            </div>
+
+            <div class="cf-turnstile" id="turnstileContainer"></div>
+
+            <button class="btn-primary" id="loginBtn" disabled>
+                <span class="btn-text">Masuk ke Dashboard</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="assets/js/login.js"></script>
+</body>
+</html>
