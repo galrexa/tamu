@@ -281,17 +281,10 @@ function exportFilename(ext) {
 }
 
 function exportCSV() {
-    const rows  = buildExportRows(allTamu);
-    const dateLabel = new Date(selectedDate + 'T00:00:00')
-        .toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
-
+    const rows    = buildExportRows(allTamu);
     const headers = ['No','Tanggal','Hari','Waktu','Nama','Instansi','Pejabat Tujuan','Email','Nomor Telepon'];
-
     const escape  = v => `"${String(v).replace(/"/g, '""')}"`;
     const lines   = [
-        escape(`Rekap Harian Tamu Bappisus`),
-        escape(`Tanggal: ${dateLabel}`),
-        '',
         headers.map(escape).join(','),
         ...rows.map((r, i) => [
             i + 1, r.tanggal, r.hari, r.waktu,
@@ -428,33 +421,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportBtn      = document.getElementById('exportBtn');
     const exportDropdown = document.getElementById('exportDropdown');
 
-    const closeDropdown = () => { exportDropdown.style.display = 'none'; };
-    const openDropdown  = () => { exportDropdown.style.display = 'block'; };
-    let dropdownOpen    = false;
-
     exportBtn.addEventListener('click', e => {
         e.stopPropagation();
-        dropdownOpen = !dropdownOpen;
-        dropdownOpen ? openDropdown() : closeDropdown();
+        const isOpen = exportDropdown.style.display === 'block';
+        exportDropdown.style.display = isOpen ? 'none' : 'block';
     });
 
-    document.addEventListener('click', () => {
-        dropdownOpen = false;
-        closeDropdown();
-    });
-
-    document.getElementById('exportCsvBtn').addEventListener('click', e => {
-        e.stopPropagation();
-        dropdownOpen = false;
-        closeDropdown();
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+        exportDropdown.style.display = 'none';
         exportCSV();
     });
 
-    document.getElementById('exportXlsxBtn').addEventListener('click', e => {
-        e.stopPropagation();
-        dropdownOpen = false;
-        closeDropdown();
+    document.getElementById('exportXlsxBtn').addEventListener('click', () => {
+        exportDropdown.style.display = 'none';
         exportXLSX();
+    });
+
+    document.addEventListener('click', e => {
+        if (!document.getElementById('exportWrap').contains(e.target)) {
+            exportDropdown.style.display = 'none';
+        }
     });
 
     startLiveClock();
