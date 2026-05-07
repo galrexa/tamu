@@ -488,6 +488,49 @@ tbody tr:hover td { background: #fbf9f7; }
     text-overflow: ellipsis;
 }
 
+/* ── EXPORT DROPDOWN ─────────────────────*/
+.export-wrap {
+    position: relative;
+}
+
+.btn-export {
+    min-width: 90px;
+}
+
+.export-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    z-index: 100;
+    min-width: 180px;
+    overflow: hidden;
+}
+
+.export-dropdown.open { display: block; }
+
+.export-item {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    text-align: left;
+    background: none;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--navy);
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.export-item:hover { background: var(--secondary-color); }
+.export-item + .export-item { border-top: 1px solid var(--border); }
+
 /* ── STATUS BADGE ─────────────────────────*/
 .live-badge {
     display: inline-flex;

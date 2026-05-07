@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body class="page-dashboard">
 
@@ -32,6 +33,13 @@
                 <span class="live-badge" id="liveBadge" style="display:none">
                     <span class="live-dot"></span> Live
                 </span>
+                <div class="export-wrap" id="exportWrap">
+                    <button class="btn-outline btn-export" id="exportBtn">Ekspor ▾</button>
+                    <div class="export-dropdown" id="exportDropdown">
+                        <button class="export-item" id="exportCsvBtn">Unduh CSV</button>
+                        <button class="export-item" id="exportXlsxBtn">Unduh Excel (.xlsx)</button>
+                    </div>
+                </div>
                 <button class="btn-outline" id="logoutBtn">Keluar</button>
                 <button class="btn-sm-navy" id="refreshBtn">Perbarui Data</button>
             </div>
@@ -47,11 +55,6 @@
             <div class="stat-card">
                 <div class="stat-label">Instansi Unik</div>
                 <div class="stat-value" id="statInstansi">—</div>
-                <div class="stat-accent"></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Update Terakhir</div>
-                <div class="stat-value small" id="statJam">—</div>
                 <div class="stat-accent"></div>
             </div>
         </div>
@@ -89,6 +92,6 @@
     </div>
 </div>
 
-<script src="assets/js/dashboard.js?v=3"></script>
+<script src="assets/js/dashboard.js?v=4"></script>
 </body>
 </html>

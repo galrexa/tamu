@@ -168,8 +168,6 @@ function updateStats(list) {
     const totalOrang  = list.reduce((sum, t) => sum + Math.max(splitNama(t["Nama"]).length, 1), 0);
     document.getElementById('statTotal').textContent    = totalOrang;
     document.getElementById('statInstansi').textContent = instansiSet.size;
-    document.getElementById('statJam').textContent      =
-        new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
 function filterTable() {
@@ -250,6 +248,149 @@ function updateLastUpdateLabel() {
         isHariIni ? 'Total Tamu Hari Ini' : `Total Tamu ${shortDate}`;
 }
 
+// ── EKSPOR ────────────────────────────────────────────────────────────────────
+
+function buildExportRows(list) {
+    const rows = [];
+    (list || []).forEach(t => {
+        const namaList  = splitNama(t["Nama"]);
+        const names     = namaList.length ? namaList : ['—'];
+        const dateRaw   = t["Tanggal pengiriman"] || t.submitdate || '';
+        const dateObj   = dateRaw ? new Date(dateRaw) : null;
+        const tanggal   = dateObj && !isNaN(dateObj)
+            ? dateObj.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' })
+            : (selectedDate.split('-').reverse().join('/'));
+        const hari      = dateObj && !isNaN(dateObj)
+            ? dateObj.toLocaleDateString('id-ID', { weekday:'long' })
+            : new Date(selectedDate + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'long' });
+        const waktu     = formatJam(dateRaw);
+        const instansi  = t["Instansi/Lembaga/Individu"] || '—';
+        const pejabat   = resolvePejabat(t);
+        const email     = t["Email"] || '—';
+        const telp      = t["Nomor Telepon"] || '—';
+
+        names.forEach(nama => {
+            rows.push({ tanggal, hari, waktu, nama, instansi, pejabat, email, telp });
+        });
+    });
+    return rows;
+}
+
+function exportFilename(ext) {
+    return `BukuTamu_${selectedDate}.${ext}`;
+}
+
+function exportCSV() {
+    const rows  = buildExportRows(allTamu);
+    const dateLabel = new Date(selectedDate + 'T00:00:00')
+        .toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+
+    const headers = ['No','Tanggal','Hari','Waktu','Nama','Instansi','Pejabat Tujuan','Email','Nomor Telepon'];
+
+    const escape  = v => `"${String(v).replace(/"/g, '""')}"`;
+    const lines   = [
+        escape(`Rekap Harian Tamu Bappisus`),
+        escape(`Tanggal: ${dateLabel}`),
+        '',
+        headers.map(escape).join(','),
+        ...rows.map((r, i) => [
+            i + 1, r.tanggal, r.hari, r.waktu,
+            r.nama, r.instansi, r.pejabat, r.email, r.telp
+        ].map(escape).join(','))
+    ];
+
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    triggerDownload(blob, exportFilename('csv'));
+}
+
+function exportXLSX() {
+    const rows      = buildExportRows(allTamu);
+    const dateLabel = new Date(selectedDate + 'T00:00:00')
+        .toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    const COLS      = 9;
+    const lastCol   = XLSX.utils.encode_col(COLS - 1);
+
+    const wb = XLSX.utils.book_new();
+    const ws = {};
+
+    // Baris 1: judul
+    ws['A1'] = { v: 'Rekap Harian Tamu Bappisus', t: 's', s: {
+        font:      { bold: true, sz: 14, color: { rgb: '0D2545' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+    }};
+
+    // Baris 2: tanggal
+    ws['A2'] = { v: `Tanggal: ${dateLabel}`, t: 's', s: {
+        font:      { sz: 11, color: { rgb: '6B7280' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+    }};
+
+    // Baris 3: kosong
+    ws['A3'] = { v: '', t: 's' };
+
+    // Baris 4: header kolom
+    const headers = ['No','Tanggal','Hari','Waktu','Nama','Instansi','Pejabat Tujuan','Email','Nomor Telepon'];
+    const headerStyle = {
+        font:      { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+        fill:      { fgColor: { rgb: '0D2545' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+    };
+    headers.forEach((h, ci) => {
+        const addr = XLSX.utils.encode_cell({ r: 3, c: ci });
+        ws[addr] = { v: h, t: 's', s: headerStyle };
+    });
+
+    // Baris 5+: data
+    rows.forEach((r, ri) => {
+        const vals = [ri + 1, r.tanggal, r.hari, r.waktu, r.nama, r.instansi, r.pejabat, r.email, r.telp];
+        vals.forEach((v, ci) => {
+            const addr = XLSX.utils.encode_cell({ r: ri + 4, c: ci });
+            ws[addr] = { v, t: ci === 0 ? 'n' : 's', s: {
+                alignment: { vertical: 'center', wrapText: true }
+            }};
+        });
+    });
+
+    // Range
+    ws['!ref'] = `A1:${lastCol}${rows.length + 4}`;
+
+    // Merge judul & tanggal
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: COLS - 1 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: COLS - 1 } },
+    ];
+
+    // Lebar kolom
+    ws['!cols'] = [
+        { wch: 4  },  // No
+        { wch: 12 },  // Tanggal
+        { wch: 12 },  // Hari
+        { wch: 7  },  // Waktu
+        { wch: 28 },  // Nama
+        { wch: 28 },  // Instansi
+        { wch: 22 },  // Pejabat
+        { wch: 26 },  // Email
+        { wch: 15 },  // Telepon
+    ];
+
+    // Tinggi baris judul
+    ws['!rows'] = [{ hpt: 28 }, { hpt: 18 }, { hpt: 8 }, { hpt: 20 }];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Buku Tamu');
+    XLSX.writeFile(wb, exportFilename('xlsx'));
+}
+
+function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ── LIVE CLOCK ────────────────────────────────────────────────────────────────
+
 function startLiveClock() {
     function tick() {
         const now = new Date();
@@ -281,6 +422,27 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedDate = todayYMD();
         dateInput.value = selectedDate;
         applyDateFilter();
+    });
+
+    // Ekspor dropdown
+    const exportBtn      = document.getElementById('exportBtn');
+    const exportDropdown = document.getElementById('exportDropdown');
+
+    exportBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        exportDropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => exportDropdown.classList.remove('open'));
+
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+        exportDropdown.classList.remove('open');
+        exportCSV();
+    });
+
+    document.getElementById('exportXlsxBtn').addEventListener('click', () => {
+        exportDropdown.classList.remove('open');
+        exportXLSX();
     });
 
     startLiveClock();
