@@ -491,10 +491,11 @@ tbody tr:hover td { background: #fbf9f7; }
 /* ── EXPORT DROPDOWN ─────────────────────*/
 .export-wrap {
     position: relative;
+    display: inline-flex;
 }
 
 .btn-export {
-    min-width: 90px;
+    min-width: 100px;
 }
 
 .export-dropdown {
@@ -505,10 +506,11 @@ tbody tr:hover td { background: #fbf9f7; }
     background: var(--white);
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: 0 8px 24px rgba(0,0,0,.1);
-    z-index: 100;
-    min-width: 180px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    z-index: 200;
+    min-width: 190px;
     overflow: hidden;
+    animation: fadeUp .15s ease both;
 }
 
 .export-dropdown.open { display: block; }
@@ -516,16 +518,18 @@ tbody tr:hover td { background: #fbf9f7; }
 .export-item {
     display: block;
     width: 100%;
-    padding: 10px 16px;
+    padding: 11px 16px;
     text-align: left;
-    background: none;
+    background: var(--white);
     border: none;
+    border-radius: 0;
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
     font-weight: 500;
     color: var(--navy);
     cursor: pointer;
     transition: background .15s;
+    outline: none;
 }
 
 .export-item:hover { background: var(--secondary-color); }
