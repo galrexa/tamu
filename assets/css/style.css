@@ -208,7 +208,37 @@ body::before { display: none; }
 }
 
 .dash-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--navy); }
-.dash-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+.dash-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.dash-date {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+}
+
+.dash-sep {
+    font-size: 14px;
+    color: var(--border);
+    line-height: 1;
+}
+
+.dash-clock {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .5px;
+    color: var(--navy);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1;
+}
+
+.dash-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
 .dash-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 

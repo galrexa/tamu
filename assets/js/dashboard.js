@@ -235,15 +235,31 @@ function applyDateFilter() {
 
 function updateLastUpdateLabel() {
     const dateObj = new Date(selectedDate + 'T00:00:00');
-    const dateStr = dateObj.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    const dateStr = dateObj.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const shortDate = dateObj.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+
+    document.getElementById('liveDate').textContent = dateStr;
+
     const now     = new Date();
     const timeStr = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
-    document.getElementById('lastUpdate').textContent =
-        `Tanggal: ${dateStr} • Diperbarui: ${timeStr}`;
+    const lastUpdateEl = document.getElementById('lastUpdate');
+    lastUpdateEl.textContent = `Data diperbarui pukul ${timeStr}`;
 
     const isHariIni = selectedDate === todayYMD();
     document.getElementById('statTotalLabel').textContent =
-        isHariIni ? 'Total Tamu Hari Ini' : `Total Tamu ${dateStr}`;
+        isHariIni ? 'Total Tamu Hari Ini' : `Total Tamu ${shortDate}`;
+}
+
+function startLiveClock() {
+    function tick() {
+        const now = new Date();
+        const jam  = String(now.getHours()).padStart(2,'0');
+        const mnt  = String(now.getMinutes()).padStart(2,'0');
+        const dtk  = String(now.getSeconds()).padStart(2,'0');
+        document.getElementById('liveClock').textContent = `${jam}:${mnt}:${dtk}`;
+    }
+    tick();
+    setInterval(tick, 1000);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -267,6 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         applyDateFilter();
     });
 
+    startLiveClock();
     muatData();
     startAutoUpdate();
 });
