@@ -417,31 +417,9 @@ document.addEventListener('DOMContentLoaded', () => {
         applyDateFilter();
     });
 
-    // Ekspor dropdown
-    const exportBtn      = document.getElementById('exportBtn');
-    const exportDropdown = document.getElementById('exportDropdown');
+    document.getElementById('exportXlsxBtn').addEventListener('click', () => exportXLSX());
 
-    exportBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        const isOpen = exportDropdown.style.display === 'block';
-        exportDropdown.style.display = isOpen ? 'none' : 'block';
-    });
-
-    document.getElementById('exportCsvBtn').addEventListener('click', () => {
-        exportDropdown.style.display = 'none';
-        exportCSV();
-    });
-
-    document.getElementById('exportXlsxBtn').addEventListener('click', () => {
-        exportDropdown.style.display = 'none';
-        exportXLSX();
-    });
-
-    document.addEventListener('click', e => {
-        if (!document.getElementById('exportWrap').contains(e.target)) {
-            exportDropdown.style.display = 'none';
-        }
-    });
+    // document.getElementById('exportCsvBtn').addEventListener('click', () => exportCSV());
 
     startLiveClock();
     muatData();
