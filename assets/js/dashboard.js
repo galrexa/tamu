@@ -131,6 +131,14 @@ function renderNamaCell(nama) {
     return `<ul class="nama-list">${list.map(n => `<li>${escHtml(n)}</li>`).join('')}</ul>`;
 }
 
+function resolvePejabat(t) {
+    const val = t["Pejabat yang dituju"];
+    if (val && val.trim().toLowerCase() === 'lainnya') {
+        return t["Pejabat yang dituju [Lainnya]"] || 'Lainnya';
+    }
+    return val || '—';
+}
+
 function renderTable(list) {
     const body = document.getElementById('tamuBody');
     if (!list || !list.length) {
@@ -142,7 +150,7 @@ function renderTable(list) {
             <td class="td-waktu">${escHtml(formatJam(t["Tanggal pengiriman"] || t.submitdate))}</td>
             <td>${renderNamaCell(t["Nama"])}</td>
             <td><span class="badge-instansi" title="${escHtml(t["Instansi/Lembaga/Individu"] || '')}">${escHtml(t["Instansi/Lembaga/Individu"] || '—')}</span></td>
-            <td>${escHtml(t["Pejabat yang dituju"] || '—')}</td>
+            <td>${escHtml(resolvePejabat(t))}</td>
             <td class="td-contact">
                 ${escHtml(t["Email"] || '—')}<br>
                 <small>${escHtml(t["Nomor Telepon"] || '')}</small>
