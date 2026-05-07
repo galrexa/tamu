@@ -513,7 +513,7 @@ tbody tr:hover td { background: #fbf9f7; }
     animation: fadeUp .15s ease both;
 }
 
-.export-dropdown.open { display: block; }
+.export-dropdown.open { display: block !important; }
 
 .export-item {
     display: block;

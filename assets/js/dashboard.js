@@ -428,20 +428,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportBtn      = document.getElementById('exportBtn');
     const exportDropdown = document.getElementById('exportDropdown');
 
+    const closeDropdown = () => { exportDropdown.style.display = 'none'; };
+    const openDropdown  = () => { exportDropdown.style.display = 'block'; };
+    let dropdownOpen    = false;
+
     exportBtn.addEventListener('click', e => {
         e.stopPropagation();
-        exportDropdown.classList.toggle('open');
+        dropdownOpen = !dropdownOpen;
+        dropdownOpen ? openDropdown() : closeDropdown();
     });
 
-    document.addEventListener('click', () => exportDropdown.classList.remove('open'));
+    document.addEventListener('click', () => {
+        dropdownOpen = false;
+        closeDropdown();
+    });
 
-    document.getElementById('exportCsvBtn').addEventListener('click', () => {
-        exportDropdown.classList.remove('open');
+    document.getElementById('exportCsvBtn').addEventListener('click', e => {
+        e.stopPropagation();
+        dropdownOpen = false;
+        closeDropdown();
         exportCSV();
     });
 
-    document.getElementById('exportXlsxBtn').addEventListener('click', () => {
-        exportDropdown.classList.remove('open');
+    document.getElementById('exportXlsxBtn').addEventListener('click', e => {
+        e.stopPropagation();
+        dropdownOpen = false;
+        closeDropdown();
         exportXLSX();
     });
 
